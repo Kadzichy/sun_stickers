@@ -1,0 +1,19 @@
+name: sun_stickers
+description: A new Flutter project.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '^3.13.0'      # ← вот эту строку добавь
+
+dependencies:
+  flutter:
+    sdk: flutter
+  mobx: ^2.3.0+1
+  flutter_mobx: ^2.2.0+2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.4.9
+  mobx_codegen: ^2.6.0
