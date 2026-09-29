@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../data/_data.dart';
 
 class StickerState {
@@ -30,7 +29,6 @@ class StickerState {
     );
   }
 
-  // Метод copyWith для удобного обновления состояния
   StickerState copyWith({
     List<StickerCategory>? categories,
     List<Sticker>? stickers,
