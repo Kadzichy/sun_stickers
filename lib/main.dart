@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'states/sticker_cubit.dart';
+import 'states/sticker_bloc.dart';
+import 'states/sticker_state.dart';
 import 'ui/_ui.dart';
 import 'ui_kit/_ui_kit.dart';
 
@@ -14,22 +15,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // BlocProvider создает Cubit и делает его доступным для всего дерева виджетов
     return BlocProvider(
-      create: (_) => StickerCubit(),
+      create: (_) => StickerBloc(),
       child: const _AppView(),
     );
   }
 }
 
-// Выносим MaterialApp в отдельный виджет, чтобы иметь доступ к context Cubit'а
 class _AppView extends StatelessWidget {
   const _AppView();
 
   @override
   Widget build(BuildContext context) {
-    // BlocBuilder слушает изменения light и перестраивает тему
-    return BlocBuilder<StickerCubit, StickerState>(
+    return BlocBuilder<StickerBloc, StickerState>(
       builder: (context, state) {
         return MaterialApp(
           title: 'Sunny Stickers',
