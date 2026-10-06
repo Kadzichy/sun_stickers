@@ -1,126 +1,98 @@
-import 'package:flutter/material.dart'; 
-import 'package:mobx/mobx.dart';
+import 'package:flutter/material.dart';
+// Предполагается, что эти импорты у вас есть в проекте:
+// import '../data/app_data.dart'; 
+// import '../models/sticker.dart';
+// import '../models/sticker_category.dart';
 
-import '../data/_data.dart';
-
-part 'sticker_state.g.dart'; 
-
-// ignore: library_private_types_in_public_api
-class StickerState = _StickerState with _$StickerState;
-
-abstract class _StickerState with Store {
-  // --- Переменные (Observable) ---
+class StickerState extends ChangeNotifier {
+  // Убираем Singleton (._internal и factory), так как Provider создает экземпляр сам.
   
-  @observable
+  // Переменные
   List<StickerCategory> categories = AppData.categories;
-
-  @observable
   List<Sticker> stickers = AppData.stickers;
-
-  @observable
+  List<Sticker> stickersByCategory = AppData.stickers;
   List<Sticker> cart = <Sticker>[];
-
-  @observable
   List<Sticker> favorite = <Sticker>[];
-
-  @observable
   bool light = true;
 
-  // Мы храним выбранную категорию, чтобы вычислять список стикеров
-  @observable
-  StickerCategory? selectedCategory;
+  // --- Действия ---
 
-  // --- Вычисляемые свойства (Computed) ---
-
-  // Автоматически пересчитывается при изменении selectedCategory или stickers
-  @computed
-  List<Sticker> get stickersByCategory {
-    if (selectedCategory == null || selectedCategory!.type == StickerType.all) {
-      return stickers;
-    }
-    return stickers.where((e) => e.type == selectedCategory!.type).toList();
-  }
-
-  // Автоматически пересчитывается при изменении cart
-  @computed
-  double get subtotal {
-    double amount = 0.0;
-    for (var e in cart) {
-      amount = amount + e.price * e.quantity;
-    }
-    return amount;
-  }
-
-  // --- Действия (Actions) ---
-
-  @action
-  void onCategoryTap(StickerCategory category) {
-    // Сбрасываем выделение у всех
+  void selectCategory(StickerCategory category) {
+    // Логика подсветки
     for (var e in categories) {
       e.isSelected = (e.type == category.type);
     }
-    // Устанавливаем выбранную категорию
-    selectedCategory = category;
+    
+    // Фильтрация
+    if (category.type == StickerType.all) {
+      stickersByCategory = stickers;
+    } else {
+      stickersByCategory = stickers.where((e) => e.type == category.type).toList();
+    }
+    notifyListeners(); // Сообщаем UI об изменениях
   }
 
-  @action
-  void onIncreaseQuantityTap(Sticker sticker) {
+  void increaseQuantity(Sticker sticker) {
     sticker.quantity++;
+    notifyListeners();
   }
 
-  @action
-  void onDecreaseQuantityTap(Sticker sticker) {
-    if (sticker.quantity == 1) return;
-    sticker.quantity--;
+  void decreaseQuantity(Sticker sticker) {
+    if (sticker.quantity > 1) {
+      sticker.quantity--;
+      notifyListeners();
+    }
   }
 
-  @action
-  void onAddToCartTap(Sticker sticker) {
+  void addToCart(Sticker sticker) {
     sticker.cart = true;
     _updateCartList();
+    notifyListeners();
   }
 
-  @action
-  void onRemoveFromCartTap(Sticker sticker) {
+  void removeFromCart(Sticker sticker) {
     sticker.cart = false;
     sticker.quantity = 1;
     _updateCartList();
+    notifyListeners();
   }
 
-  @action
-  void onCheckOutTap() {
+  void checkOut() {
     for (var e in cart) {
       e.cart = false;
       e.quantity = 1;
     }
-    cart.clear(); // Или _updateCartList() если нужно пересчитать
+    _updateCartList();
+    notifyListeners();
   }
 
-  @action
-  void onAddRemoveFavoriteTap(Sticker sticker) {
+  void toggleFavorite(Sticker sticker) {
     sticker.favorite = !sticker.favorite;
-    _updateFavoriteList();
+    favorite = stickers.where((e) => e.favorite).toList();
+    notifyListeners();
   }
 
-  @action
   void toggleTheme() {
     light = !light;
+    notifyListeners();
   }
 
   // --- Вспомогательные методы ---
 
-  // Обновляем список корзины на основе флагов в стикерах
+  // Приватный метод для обновления списка корзины, чтобы не дублировать код
   void _updateCartList() {
     cart = stickers.where((e) => e.cart).toList();
   }
 
-  // Обновляем список избранного
-  void _updateFavoriteList() {
-    favorite = stickers.where((e) => e.favorite).toList();
+  String getStickerPrice(Sticker sticker) {
+    return (sticker.quantity * sticker.price).toString();
   }
 
-  // Метод для цены (оставил как есть, но лучше вынести в UI или модель)
-  String stickerPrice(Sticker sticker) {
-    return (sticker.quantity * sticker.price).toString();
+  double get subtotal {
+    double amount = 0.0;
+    for (var e in cart) {
+      amount += e.price * e.quantity;
+    }
+    return amount;
   }
 }
